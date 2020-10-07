@@ -1,4 +1,4 @@
-# curriculo_virtual
+# Currículo Virtual
 
 A new Flutter application.
 
