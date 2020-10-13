@@ -1,8 +1,11 @@
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:curriculo_virtual/main.dart';
 import 'package:flutter/cupertino.dart';
-
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter/painting.dart';
 import '../main.dart';
 import '../service/CurriculoObject.dart';
 
@@ -25,7 +28,64 @@ class _CurriculoTelaState extends State<CurriculoTela> {
   final TextStyle nome = TextStyle(fontSize: 24);
   bool editmode_supl = false;
   bool editmode_cont = false;
+  bool editmode_curs = false;
+  bool editmode_titl = false;
   bool editmode_prof = false;
+  bool editmode_img = false;
+
+  File _image;
+  final picker = ImagePicker();
+
+  Future getImage() async {
+    String path;
+    await getApplicationDocumentsDirectory().then((value) => path = value.path);
+    if(await File("$path/image1.png").exists()){
+      _image = File("$path/image1.png");
+    }
+    else{
+      _image = null;
+    }
+  }
+
+  Future setImageCamera() async {
+    String path;
+    await getApplicationDocumentsDirectory().then((value) => path = value.path);
+    if (await Permission.camera.request().isGranted) {
+      final pickedFile = await picker.getImage(source: ImageSource.camera);
+      if (pickedFile != null) {
+        await _image.delete();
+        imageCache.evict(FileImage(_image));
+        setState(() {
+          _image = File(pickedFile.path);
+        });
+        await _image.copy('$path/image1.png');
+      }
+      editmode_img = !editmode_img;
+    }
+    else{
+      print("Erro");
+    }
+  }
+
+  Future setImageMedia() async {
+    String path;
+    await getApplicationDocumentsDirectory().then((value) => path = value.path);
+    if (await Permission.mediaLibrary.request().isGranted) {
+      final pickedFile = await picker.getImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        await _image.delete();
+        imageCache.evict(FileImage(_image));
+        setState(() {
+          _image = File(pickedFile.path);
+        });
+        await _image.copy('$path/image1.png');
+      }
+      editmode_img = !editmode_img;
+    }
+    else{
+      print("Erro");
+    }
+  }
 
 
   //Controladores de texto.
@@ -33,6 +93,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
   TextEditingController expertiseController = new TextEditingController();
   TextEditingController telefoneController = new TextEditingController();
   TextEditingController emailController = new TextEditingController();
+  List<List<TextEditingController>> editorCursos;
 
   void initState() {
     super.initState();
@@ -82,10 +143,57 @@ class _CurriculoTelaState extends State<CurriculoTela> {
           child: ListView(
             children: [
               Column(
+                children: [
+                  SizedBox(height: alturaTela * 0.025),
+                  FutureBuilder<dynamic>(
+                      future: getImage(), // function where you call your api
+                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {  // AsyncSnapshot<Your object type>
+                        if( snapshot.connectionState == ConnectionState.waiting){
+                          return  Center();
+                        }else{
+                          if (snapshot.hasError)
+                            return Center(child: Text('Error: ${snapshot.error}'));
+                          else
+                            return editmode_img?
+                            Column(
+                              children: [
+                                Text("Escolha de onde carregar a nova imagem:", style: conteudo,),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(icon: Icon(Icons.image, color: color,size: alturaTela*0.06,),
+                                        onPressed: setImageMedia),
+                                    IconButton(icon: Icon(Icons.camera, color: color,size: alturaTela*0.06,),
+                                        onPressed: setImageCamera),
+                                  ],
+                                ),
+                                SizedBox(height: alturaTela*0.015,),
+                                GestureDetector(
+                                  onTap: (){
+                                    setState(() {
+                                      editmode_img = !editmode_img;
+                                    });
+                                  },
+                                  child: Container(child: Text("Cancelar", style: TextStyle(fontSize: 16, color: Colors.red, fontWeight: FontWeight.bold))),
+                                ),
+                              ],
+                            )
+                                :
+                            GestureDetector(
+                                onTap: (){
+                                  setState(() {
+                                    editmode_img = !editmode_img;
+                                  });
+                                },
+                                child: carregarImagem(_image, alturaTela)
+                            );
+                        }
+                      }),
+                ],
+              ),
+              Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  SizedBox(height: alturaTela * 0.025),
-                  carregarImagem(curriculo.imagem, alturaTela),
                   SizedBox(height: alturaTela * 0.075),
                   Column(
                     children: [
@@ -101,23 +209,6 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                             'Formação Profissional ',
                             style: titulo,
                           ),
-                          Container(
-                            height: alturaTela*0.05,
-                            width: alturaTela*0.05,
-                            child: Ink(
-                              decoration: const ShapeDecoration(
-                                color: color,
-                                shape: CircleBorder(),
-                              ),
-                              child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.025,),
-                                color: Colors.white,
-                                onPressed: (){
-                                  setState(() {
-                                    editmode_prof = !editmode_prof;
-                                  });
-                                },),
-                            ),
-                          )
                         ],
                       ),
                       Padding(
@@ -126,25 +217,102 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(14.0),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Títulos',
-                            style: subtitulo,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Títulos ',
+                              style: subtitulo,
+                            ),
+
+                            Container(
+                              height: alturaTela*0.05,
+                              width: alturaTela*0.05,
+                              child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.03,),
+                                color: color,
+                                onPressed: (){
+                                  setState(() {
+                                    editmode_curs = !editmode_curs;
+                                  });
+                                },),
+                            )
+                          ],
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(14.0),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Cursos',
-                            style: subtitulo,
+                          padding: const EdgeInsets.all(14.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Cursos ',
+                                style: subtitulo,
+                              ),
+
+                              Container(
+                                height: alturaTela*0.05,
+                                width: alturaTela*0.05,
+                                child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.03,),
+                                  color: color,
+                                  onPressed: (){
+                                    setState(() {
+                                      editmode_prof = !editmode_prof;
+                                    });
+                                  },),
+                              )
+                            ],
                           ),
-                        ),
                       ),
-                      listarCursos(curriculo.listaCursos, alturaTela, conteudo)
+                      editmode_curs?
+                      ListView.builder(
+                        physics: ScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: curriculo.listaCursos.length,
+                        itemBuilder: (BuildContext context, int index){
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                              height: alturaTela * 0.15,
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    flex: 4,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Flexible(child: Text(curriculo.listaCursos[index].titulo, style: conteudo), flex: 5,),
+                                        Flexible(child: Text(curriculo.listaCursos[index].instituicao, style: conteudo), flex: 5,),
+                                        Flexible(child: SizedBox(), flex: 1)
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(flex: 2, child: SizedBox()),
+                                  Expanded(
+                                      flex: 3,
+                                      child: Row(
+                                        children: [
+                                          Text("Status: "),
+                                          Text(curriculo.listaCursos[index].status, style: conteudo),
+                                        ],
+                                      )),
+                                  Expanded(flex: 1, child: SizedBox()),
+                                  Expanded(
+                                      flex: 2,
+                                      child: Row(
+                                        children: [
+                                          Text("Data de início: "),
+                                          Text(curriculo.listaCursos[index].data, style: conteudo),
+                                        ],
+                                      )
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                          :
+                          listarCursos(curriculo.listaCursos, alturaTela, conteudo)
                     ],
                   ),
                   Column(
@@ -159,19 +327,13 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                           Container(
                             height: alturaTela*0.05,
                             width: alturaTela*0.05,
-                            child: Ink(
-                              decoration: const ShapeDecoration(
-                                color: color,
-                                shape: CircleBorder(),
-                              ),
-                              child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.025,),
-                                color: Colors.white,
-                                onPressed: (){
-                                  setState(() {
-                                    editmode_supl = !editmode_supl;
-                                  });
-                                },),
-                            ),
+                            child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.04,),
+                              color: color,
+                              onPressed: (){
+                                setState(() {
+                                  editmode_supl = !editmode_supl;
+                                });
+                              },),
                           )
                         ],
                       ),
@@ -225,11 +387,11 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                                         editmode_supl = !editmode_supl;
                                       });
                                       /*
-                                        if (_formKey.currentState.validate()) {
-                                          // If the form is valid, display a Snackbar.
-                                          Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
-                                        }
-                                         */
+                                    if (_formKey.currentState.validate()) {
+                                      // If the form is valid, display a Snackbar.
+                                      Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
+                                    }
+                                     */
                                     },
                                     child: Text('Salvar'),
                                   ),
@@ -244,20 +406,20 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                           Padding(
                             padding: const EdgeInsets.all(14.0),
                             child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Perfil',
-                                    style: subtitulo,
-                                  ),
-                                  Text(
-                                    curriculo.perfil,
-                                    style: conteudo,
-                                  ),
-                                ],
-                              )
+                                alignment: Alignment.centerLeft,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Perfil',
+                                      style: subtitulo,
+                                    ),
+                                    Text(
+                                      curriculo.perfil,
+                                      style: conteudo,
+                                    ),
+                                  ],
+                                )
                             ),
                           ),
                           Padding(
@@ -295,19 +457,13 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                           Container(
                             height: alturaTela*0.05,
                             width: alturaTela*0.05,
-                            child: Ink(
-                              decoration: const ShapeDecoration(
-                                color: color,
-                                shape: CircleBorder(),
-                              ),
-                              child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.025,),
-                                color: Colors.white,
-                                onPressed: (){
-                                  setState(() {
-                                    editmode_cont = !editmode_cont;
-                                  });
-                                },),
-                            ),
+                            child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.04,),
+                              color: color,
+                              onPressed: (){
+                                setState(() {
+                                  editmode_cont = !editmode_cont;
+                                });
+                              },),
                           )
                         ],
                       ),
@@ -361,11 +517,11 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                                         editmode_cont = !editmode_cont;
                                       });
                                       /*
-                                        if (_formKey.currentState.validate()) {
-                                          // If the form is valid, display a Snackbar.
-                                          Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
-                                        }
-                                         */
+                                    if (_formKey.currentState.validate()) {
+                                      // If the form is valid, display a Snackbar.
+                                      Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
+                                    }
+                                     */
                                     },
                                     child: Text('Salvar'),
                                   ),
@@ -425,14 +581,14 @@ class _CurriculoTelaState extends State<CurriculoTela> {
           )
       ),
       /*
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => {
-          setState(() { editmode_supl = !editmode_supl; })
-        },
-        tooltip: 'Editar',
-        child: Icon(Icons.create),
-      ),
-       */
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => {
+                setState(() { editmode_supl = !editmode_supl; })
+              },
+              tooltip: 'Editar',
+              child: Icon(Icons.create),
+            ),
+             */
     );
   }
 }
@@ -486,12 +642,13 @@ Widget listarCursos(List<Curso> cursos, double alturaTela, TextStyle conteudo){
     },
   );
 }
-Widget carregarImagem(bool imagem, double alturaTela){
-  if(imagem){
+Widget carregarImagem(File _image, double alturaTela){
+  if(_image != null){
     return Container(
       decoration: BoxDecoration(
-        image: DecorationImage(image: NetworkImage('https://scontent.ffor8-1.fna.fbcdn.net/v/t1.0-9/84750702_1749653265171418_2193533840671113216_o.jpg?_nc_cat=108&_nc_sid=174925&_nc_eui2=AeGA9VVcfezAkYxWxI5ixn5nRBrMK6x0vaFEGswrrHS9oXFBOD8k-PYBf0UHFvG6hPs6Qw0KrdtbrbHDAcuKHnVM&_nc_ohc=ZrKGxMndcSgAX98kgfa&_nc_ht=scontent.ffor8-1.fna&oh=57e16768d1ed5ba0a6286721fa2574b8&oe=5F9C9845')),
-        borderRadius: BorderRadius.circular(100),),
+        image: DecorationImage(image: Image.file(_image).image),
+        //borderRadius: BorderRadius.circular(100),
+      ),
       height: alturaTela * 0.25,
       width: alturaTela * 0.25,
     );
