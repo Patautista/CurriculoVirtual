@@ -1,7 +1,9 @@
+import 'package:curriculo_virtual/main.dart';
 import 'package:flutter/cupertino.dart';
 
 import 'package:flutter/material.dart';
 
+import '../main.dart';
 import '../service/CurriculoObject.dart';
 
 class CurriculoTela extends StatefulWidget {
@@ -22,10 +24,15 @@ class _CurriculoTelaState extends State<CurriculoTela> {
   final TextStyle conteudo = TextStyle(fontSize: 14);
   final TextStyle nome = TextStyle(fontSize: 24);
   bool editmode_supl = false;
+  bool editmode_cont = false;
+  bool editmode_prof = false;
+
 
   //Controladores de texto.
   final perfilController = new TextEditingController();
   TextEditingController expertiseController = new TextEditingController();
+  TextEditingController telefoneController = new TextEditingController();
+  TextEditingController emailController = new TextEditingController();
 
   void initState() {
     super.initState();
@@ -38,15 +45,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
         composing: TextRange.empty,
       );
     });
-  }
 
-  void dispose() {
-    perfilController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
 
     curriculo = widget.curriculo;
     ///Testes.
@@ -57,6 +56,20 @@ class _CurriculoTelaState extends State<CurriculoTela> {
     List<Titulo> titulos = <Titulo> [tituloteste, tituloteste];
     curriculo = new CurriculoObject("caleb.kart@gmail.com", true, "Idiomas.", cursos,
         titulos, "Gosto de aprender.", "84028922", "Caleb de Sousa Vasconcelos");
+    perfilController.text = curriculo.perfil;
+    expertiseController.text = curriculo.informal;
+    telefoneController.text = curriculo.telefone;
+    emailController.text = curriculo.email;
+
+  }
+
+  void dispose() {
+    perfilController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
 
     final alturaTela = MediaQuery.of(context).size.height;
 
@@ -81,9 +94,31 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                         style: nome,
                       ),
                       SizedBox(height: alturaTela * 0.05),
-                      Text(
-                        'Formação profissional:',
-                        style: titulo,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Formação Profissional ',
+                            style: titulo,
+                          ),
+                          Container(
+                            height: alturaTela*0.05,
+                            width: alturaTela*0.05,
+                            child: Ink(
+                              decoration: const ShapeDecoration(
+                                color: color,
+                                shape: CircleBorder(),
+                              ),
+                              child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.025,),
+                                color: Colors.white,
+                                onPressed: (){
+                                  setState(() {
+                                    editmode_prof = !editmode_prof;
+                                  });
+                                },),
+                            ),
+                          )
+                        ],
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 14.0),
@@ -114,32 +149,134 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                   ),
                   Column(
                     children: [
-                      Text(
-                        'Informações suplementares:',
-                        style: titulo,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Informações suplementares ',
+                            style: titulo,
+                          ),
+                          Container(
+                            height: alturaTela*0.05,
+                            width: alturaTela*0.05,
+                            child: Ink(
+                              decoration: const ShapeDecoration(
+                                color: color,
+                                shape: CircleBorder(),
+                              ),
+                              child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.025,),
+                                color: Colors.white,
+                                onPressed: (){
+                                  setState(() {
+                                    editmode_supl = !editmode_supl;
+                                  });
+                                },),
+                            ),
+                          )
+                        ],
                       ),
                       Divider(color: Colors.black,),
-                      editmode_supl? editar(context, perfilController, expertiseController) :
+                      editmode_supl?
+                      FocusTraversalGroup(
+                        child: Form(
+                          autovalidateMode: AutovalidateMode.always,
+                          onChanged: () {
+                            Form.of(primaryFocus.context).save();
+                          },
+                          child: Column(
+                              children: [
+                                ConstrainedBox(
+                                  constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                                  child: TextFormField(
+                                    onChanged: (text) {
+                                      print("First text field: $text");
+                                    },
+                                    controller: perfilController,
+                                    decoration: InputDecoration(
+                                        hintText: "Perfil"
+                                    ),
+                                    onSaved: (String value) {
+                                      print(perfilController.text);
+                                    },
+                                  ),
+                                ),
+                                SizedBox(height: alturaTela*0.05),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                                  child: TextFormField(
+                                    controller: expertiseController,
+                                    decoration: InputDecoration(
+                                        hintText: "Expertise Informal"
+                                    ),
+                                    onSaved: (String value) {
+                                      print('Value for field ');
+                                    },
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                                  child: RaisedButton(
+                                    onPressed: () {
+                                      // Validate returns true if the form is valid, or false
+                                      // otherwise.
+                                      setState(() {
+                                        curriculo.perfil = perfilController.text;
+                                        curriculo.informal = expertiseController.text;
+                                        editmode_supl = !editmode_supl;
+                                      });
+                                      /*
+                                        if (_formKey.currentState.validate()) {
+                                          // If the form is valid, display a Snackbar.
+                                          Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
+                                        }
+                                         */
+                                    },
+                                    child: Text('Salvar'),
+                                  ),
+                                ),
+                              ]
+                          ),
+                        ),
+                      )
+                          :
                       Column(
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(14.0),
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Perfil',
-                                style: subtitulo,
-                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Perfil',
+                                    style: subtitulo,
+                                  ),
+                                  Text(
+                                    curriculo.perfil,
+                                    style: conteudo,
+                                  ),
+                                ],
+                              )
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(14.0),
                             child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Expertise Informal',
-                                style: subtitulo,
-                              ),
+                                alignment: Alignment.centerLeft,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Expertise Informal',
+                                      style: subtitulo,
+                                    ),
+                                    Text(
+                                      curriculo.informal,
+                                      style: conteudo,
+                                    ),
+                                  ],
+                                )
                             ),
                           ),
                         ],
@@ -148,31 +285,138 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                   ),
                   Column(
                     children: [
-                      Text(
-                        'Informações para contato:',
-                        style: titulo,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Informações para contato ',
+                            style: titulo,
+                          ),
+                          Container(
+                            height: alturaTela*0.05,
+                            width: alturaTela*0.05,
+                            child: Ink(
+                              decoration: const ShapeDecoration(
+                                color: color,
+                                shape: CircleBorder(),
+                              ),
+                              child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.025,),
+                                color: Colors.white,
+                                onPressed: (){
+                                  setState(() {
+                                    editmode_cont = !editmode_cont;
+                                  });
+                                },),
+                            ),
+                          )
+                        ],
                       ),
                       Divider(color: Colors.black,),
-                      Padding(
-                        padding: const EdgeInsets.all(14.0),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Telefone',
-                            style: subtitulo,
+                      editmode_cont?
+                      FocusTraversalGroup(
+                        child: Form(
+                          autovalidateMode: AutovalidateMode.always,
+                          onChanged: () {
+                            Form.of(primaryFocus.context).save();
+                          },
+                          child: Column(
+                              children: [
+                                ConstrainedBox(
+                                  constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                                  child: TextFormField(
+                                    onChanged: (text) {
+                                      print("First text field: $text");
+                                    },
+                                    controller: telefoneController,
+                                    decoration: InputDecoration(
+                                        hintText: "Telefone"
+                                    ),
+                                    onSaved: (String value) {
+                                      print(perfilController.text);
+                                    },
+                                  ),
+                                ),
+                                SizedBox(height: alturaTela*0.05),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                                  child: TextFormField(
+                                    controller: emailController,
+                                    decoration: InputDecoration(
+                                        hintText: "E-mail"
+                                    ),
+                                    onSaved: (String value) {
+                                      print('Value for field ');
+                                    },
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                                  child: RaisedButton(
+                                    onPressed: () {
+                                      // Validate returns true if the form is valid, or false
+                                      // otherwise.
+                                      setState(() {
+                                        curriculo.telefone = telefoneController.text;
+                                        curriculo.email = emailController.text;
+                                        editmode_cont = !editmode_cont;
+                                      });
+                                      /*
+                                        if (_formKey.currentState.validate()) {
+                                          // If the form is valid, display a Snackbar.
+                                          Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
+                                        }
+                                         */
+                                    },
+                                    child: Text('Salvar'),
+                                  ),
+                                ),
+                              ]
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(14.0),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'E-mail',
-                            style: subtitulo,
+                      )
+                          :
+                      Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(14.0),
+                            child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Telefone',
+                                      style: subtitulo,
+                                    ),
+                                    Text(
+                                      curriculo.telefone,
+                                      style: conteudo,
+                                    ),
+                                  ],
+                                )
+                            ),
                           ),
-                        ),
-                      ),
+                          Padding(
+                            padding: const EdgeInsets.all(14.0),
+                            child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'E-mail',
+                                      style: subtitulo,
+                                    ),
+                                    Text(
+                                      curriculo.email,
+                                      style: conteudo,
+                                    ),
+                                  ],
+                                )
+                            ),
+                          ),
+                        ],
+                      )
                     ],
                   )
                 ],
@@ -180,6 +424,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
             ],
           )
       ),
+      /*
       floatingActionButton: FloatingActionButton(
         onPressed: () => {
           setState(() { editmode_supl = !editmode_supl; })
@@ -187,6 +432,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
         tooltip: 'Editar',
         child: Icon(Icons.create),
       ),
+       */
     );
   }
 }

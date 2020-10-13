@@ -16,7 +16,14 @@ class _EntrarTelaState extends State<EntrarTela> {
           Text("Entrar"),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: TextFormField(),
+            child: Form(
+              child: Column(
+                children: [
+                  TextFormField(),
+                  TextFormField()
+                ],
+              ),
+            ),
           )
         ],
       ),
