@@ -40,7 +40,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
   bool editmode_titl = false;
   bool editmode_prof = false;
   bool editmode_img = false;
-  bool printmode = true;
+  bool printmode = false;
 
   ui.Image curriculoImage = null;
 
@@ -51,8 +51,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
     var renderObject = globalKey.currentContext.findRenderObject();
 
     RenderRepaintBoundary boundary = renderObject;
-    ui.Image captureImage = await boundary.toImage();
-    setState(() => curriculoImage = captureImage);
+    ui.Image captureImage = await boundary.toImage(pixelRatio: 2.0);
 
     ByteData byteData = await captureImage.toByteData(format: ui.ImageByteFormat.png);
     Uint8List pngBytes = byteData.buffer.asUint8List();
@@ -61,7 +60,8 @@ class _CurriculoTelaState extends State<CurriculoTela> {
     imgFile.writeAsBytes(pngBytes);
     print(imgFile.path);
 
-    Share.shareFiles(['$path/screenshot.png'], text: 'Great picture');
+    Share.shareFiles(['$path/screenshot.png'], text: 'Meu currículo');
+    setState(() => printmode = !printmode);
   }
 
   File _image;
@@ -134,26 +134,19 @@ class _CurriculoTelaState extends State<CurriculoTela> {
 
   void initState() {
     super.initState();
-    perfilController.addListener(() {
-      final text = perfilController.text.toLowerCase();
-      perfilController.value = perfilController.value.copyWith(
-        text: text,
-        selection:
-        TextSelection(baseOffset: text.length, extentOffset: text.length),
-        composing: TextRange.empty,
-      );
-    });
 
     curriculo = widget.curriculo;
     ///Testes.
 
-    Titulo tituloteste = Titulo("Programação em linguagem Java", "ExperiênciacomFrameworkSpringBootecriação de aplicações Backend com API REST");
     List<Curso> cursos = <Curso> [
-      Curso("01/01/2017", "Biologia" , "Incompleto", "Universidade Federal do Ceará"),
-      Curso("08/05/2019", "Computação" , "Completo", "Universidade Federal do Ceará"),
-      Curso("08/05/2019", "Computação" , "Completo", "Universidade Federal do Ceará")
+      Curso(data:"01/01/2017", titulo: "Biologia" , status: "Incompleto", instituicao: "Universidade Federal do Ceará"),
+      Curso(data:"04/03/2019", titulo: "Computação" , status: "Completo", instituicao: "Universidade Federal do Ceará"),
+      Curso(data:"31/05/2019", titulo: "Direito" , status: "Completo", instituicao: "Universidade Federal do Ceará")
     ];
-    List<Titulo> titulos = <Titulo> [tituloteste, tituloteste];
+    List<Titulo> titulos = <Titulo> [
+      Titulo(titulo:"Programação em linguagem Java", resumo: "Experiência com Framework SpringBoot e criação de aplicações Backend com API REST"),
+      Titulo(titulo:"Programação em linguagem Java", resumo: "Experiência com Framework SpringBoot e criação de aplicações Backend com API REST")
+    ];
     curriculo = new CurriculoObject("caleb.kart@gmail.com", true, "Idiomas.", cursos,
         titulos, "Gosto de aprender.", "84028922", "Caleb de Sousa Vasconcelos");
 
@@ -183,7 +176,10 @@ class _CurriculoTelaState extends State<CurriculoTela> {
   @override
   Widget build(BuildContext context) {
 
-     final Random random = Random();
+    if(printmode){
+      Future.delayed(const Duration(milliseconds: 100), () {compartilharCurriculo();});
+    }
+
     final alturaTela = MediaQuery.of(context).size.height;
 
     List<Widget> corpoCurriculo = [
@@ -274,21 +270,128 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                       'Títulos ',
                       style: subtitulo,
                     ),
-
-                    Container(
-                      height: alturaTela*0.05,
-                      width: alturaTela*0.05,
-                      child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.03,),
-                        color: color,
-                        onPressed: (){
-                          setState(() {
-                            editmode_curs = !editmode_curs;
-                          });
-                        },),
-                    )
+                    printmode?
+                        Container()
+                        :
+                        Container(
+                          height: alturaTela*0.05,
+                          width: alturaTela*0.05,
+                          child:  IconButton(icon: Icon(Icons.create, size: alturaTela*0.03,),
+                            color: color,
+                            onPressed: (){
+                              setState(() {
+                                editmode_titl = !editmode_titl;
+                              });
+                            },),
+                        )
                   ],
                 ),
               ),
+              editmode_titl?
+              Column(
+                children: [
+                  Form(
+                    //key: GlobalKey<FormState>(),
+                    autovalidateMode: AutovalidateMode.always,
+                    onChanged: () {
+                      //Form.of(primaryFocus.context).save();
+                    },
+                    child: ListView.builder(
+                      addAutomaticKeepAlives: true,
+                      physics: ScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: curriculo.listaCursos.length,
+                      itemBuilder: (BuildContext context, int index){
+                        return Column(
+                            children: [
+                              SizedBox(height: alturaTela*0.05),
+                              ConstrainedBox(
+                                constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                                child: TextFormField(
+                                  onChanged: (text) {
+                                    print("First text field: $text");
+                                  },
+                                  controller: editorCursos[index]["cursoController"],
+                                  decoration: InputDecoration(
+                                      hintText: "Nome do Curso"
+                                  ),
+                                  onSaved: (String value) {
+                                    print(editorCursos[index]["cursoController"].text);
+                                  },
+                                ),
+                              ),
+                              ConstrainedBox(
+                                constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                                child: TextFormField(
+                                  onChanged: (text) {
+                                    print("First text field: $text");
+                                  },
+                                  controller: editorCursos[index]["instituicaoController"],
+                                  decoration: InputDecoration(
+                                      hintText: "Nome da Instituição"
+                                  ),
+                                  onSaved: (String value) {
+                                    print(editorCursos[index]["instituicaoController"].text);
+                                  },
+                                ),
+                              ),
+                              ConstrainedBox(
+                                constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                                child: TextFormField(
+                                  controller: editorCursos[index]["statusController"],
+                                  decoration: InputDecoration(
+                                      hintText: "Status do curso"
+                                  ),
+                                  onSaved: (String value) {
+                                    print('Value for field ');
+                                  },
+                                ),
+                              ),
+                              ConstrainedBox(
+                                constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                                child: TextField(
+                                  controller: editorCursos[index]["dataController"],
+                                  decoration: InputDecoration(
+                                      hintText: "Status do curso"
+                                  ),
+                                ),
+                              ),
+                            ]
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: RaisedButton(
+                      color: color,
+                      textColor: Colors.white,
+                      onPressed: () {
+                        for(int i=0; i < curriculo.listaCursos.length; i++){
+                          setState(() {
+                            curriculo.listaCursos[i].titulo = editorCursos[i]["cursoController"].text;
+                            curriculo.listaCursos[i].instituicao = editorCursos[i]["instituicaoController"].text;
+                            curriculo.listaCursos[i].status = editorCursos[i]["statusController"].text;
+                            curriculo.listaCursos[i].data = editorCursos[i]["dataController"].text;
+                          });
+                        }
+                        setState(() {
+                          editmode_curs = !editmode_curs;
+                        });
+                        /*
+                              if (_formKey.currentState.validate()) {
+                                // If the form is valid, display a Snackbar.
+                                Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
+                              }
+                               */
+                      },
+                      child: Text('Salvar'),
+                    ),
+                  ),
+                ],
+              )
+                  :
+              listarTitulos(curriculo.listaTitulos, alturaTela, conteudo),
               Padding(
                 padding: const EdgeInsets.all(14.0),
                 child: Row(
@@ -298,6 +401,9 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                       'Cursos ',
                       style: subtitulo,
                     ),
+                    printmode?
+                    Container()
+                        :
                     Container(
                       height: alturaTela*0.05,
                       width: alturaTela*0.05,
@@ -428,6 +534,9 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                     'Informações suplementares ',
                     style: titulo,
                   ),
+                  printmode?
+                  Container()
+                      :
                   Container(
                     height: alturaTela*0.05,
                     width: alturaTela*0.05,
@@ -560,6 +669,9 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                     'Informações para contato ',
                     style: titulo,
                   ),
+                  printmode?
+                  Container()
+                      :
                   Container(
                     height: alturaTela*0.05,
                     width: alturaTela*0.05,
@@ -683,7 +795,6 @@ class _CurriculoTelaState extends State<CurriculoTela> {
               )
             ],
           ),
-          printmode? SizedBox() : SizedBox(height: alturaTela*0.15,)
         ],
       ),
     ];
@@ -691,37 +802,25 @@ class _CurriculoTelaState extends State<CurriculoTela> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(icon: Icon(Icons.share, color: Colors.white,), onPressed: compartilharCurriculo)
+          IconButton(icon: Icon(Icons.share, color: Colors.white,),
+              onPressed: (){
+                setState(() => printmode = !printmode);
+              })
         ],
         title: Text(widget.title),
       ),
       body: Capturer(
-          child: true? Column(
+          child: Column(
             children: corpoCurriculo,
-          )
-              : Container(
-              height: alturaTela,
-              child: ListView(
-                children: corpoCurriculo,
-              )
           ),
           overRepaintKey: globalKey,
-      ),
-      floatingActionButton: curriculoImage == null
-          ? FloatingActionButton(
-        child: Icon(Icons.camera),
-        onPressed: () async {},
-      )
-          : FloatingActionButton(
-        onPressed: () => setState(() => curriculoImage = null),
-        child: Icon(Icons.remove),
       ),
     );
   }
 }
 
 
-Widget listarTitulos(List<Curso> titulos, double alturaTela, TextStyle conteudo){
+Widget listarTitulos(List<Titulo> titulos, double alturaTela, TextStyle conteudo){
   return ListView.builder(
     physics: ScrollPhysics(),
     shrinkWrap: true,
@@ -730,33 +829,14 @@ Widget listarTitulos(List<Curso> titulos, double alturaTela, TextStyle conteudo)
       return Padding(
         padding: const EdgeInsets.all(8.0),
         child: Container(
-          height: alturaTela * 0.15,
+          height: alturaTela * 0.1,
           child: Column(
             children: [
               Align(child: Text(titulos[index].titulo,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
                 alignment: Alignment.centerLeft,
               ),
-              Align(child: Text(titulos[index].instituicao, style: conteudo), alignment: Alignment.centerLeft,),
-              Expanded(flex: 2, child: SizedBox()),
-              Expanded(
-                  flex: 3,
-                  child: Row(
-                    children: [
-                      Text("Status: "),
-                      Text(titulos[index].status, style: conteudo),
-                    ],
-                  )),
-              Expanded(flex: 1, child: SizedBox()),
-              Expanded(
-                  flex: 2,
-                  child: Row(
-                    children: [
-                      Text("Data de início: "),
-                      Text(titulos[index].data, style: conteudo),
-                    ],
-                  )
-              )
+              Align(child: Text(titulos[index].resumo, style: conteudo), alignment: Alignment.centerLeft,),
             ],
           ),
         ),

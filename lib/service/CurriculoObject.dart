@@ -16,13 +16,13 @@ class CurriculoObject{
   String email;
 }
 class Titulo {
-  Titulo(this.resumo, this.titulo);
+  Titulo({this.resumo, this.titulo});
 
   String titulo;
   String resumo;
 }
 class Curso {
-  Curso(this.data, this.titulo, this.status, this.instituicao);
+  Curso({this.data, this.titulo, this.status, this.instituicao});
 
   String titulo;
   String data;

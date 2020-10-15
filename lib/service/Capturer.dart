@@ -15,7 +15,7 @@ class Capturer extends StatelessWidget {
       child: OverRepaintBoundary(
         key: overRepaintKey,
         child: RepaintBoundary(
-            child: Container(color: Colors.white,child: child == null? Container(): child)
+            child: Container(color: Colors.white, child: child == null? Container(): child)
         ),
       ),
     );
