@@ -1,7 +1,8 @@
 import 'dart:io';
-import 'dart:math';
+import 'package:provider/provider.dart';
 import 'dart:typed_data';
 import 'package:curriculo_virtual/service/Capturer.dart';
+import 'package:curriculo_virtual/service/auth.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -143,24 +144,13 @@ class _CurriculoTelaState extends State<CurriculoTela> {
     curriculo = widget.curriculo;
     ///Testes.
 
-    List<Curso> cursos = <Curso> [
-      Curso(data:"01/01/2017", titulo: "Biologia" , status: "Incompleto", instituicao: "Universidade Federal do Ceará"),
-      Curso(data:"04/03/2019", titulo: "Computação" , status: "Completo", instituicao: "Universidade Federal do Ceará"),
-      Curso(data:"31/05/2019", titulo: "Direito" , status: "Completo", instituicao: "Universidade Federal do Ceará")
-    ];
-    List<Titulo> titulos = <Titulo> [
-      Titulo(titulo:"Programação em linguagem Java", resumo: "Experiência com Framework SpringBoot e criação de aplicações Backend com API REST"),
-      Titulo(titulo:"Programação em linguagem PHP", resumo: "Experiência com Framework SpringBoot e criação de aplicações Backend com API REST")
-    ];
-    curriculo = new CurriculoObject("caleb.kart@gmail.com", true, "Idiomas.", cursos,
-        titulos, "Gosto de aprender.", "84028922", "Caleb de Sousa Vasconcelos");
-
     perfilController.text = curriculo.perfil;
     expertiseController.text = curriculo.informal;
     telefoneController.text = curriculo.telefone;
     emailController.text = curriculo.email;
 
 
+    //Preparando os controladores de texto gerados dinamicamente para Cursos e Títulos.
     for(int i=0; i< curriculo.listaCursos.length; i++){
       var mapaControladoreCurso = {"cursoController": TextEditingController(),"instituicaoController": TextEditingController() ,
         "statusController": TextEditingController(), "dataController": TextEditingController()};
@@ -178,6 +168,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
       mapaControladoreTitulo["resumoController"].text = curriculo.listaTitulos[i].resumo;
       editorTitulos.add(mapaControladoreTitulo);
     }
+
   }
 
   void dispose() {
@@ -880,7 +871,12 @@ class _CurriculoTelaState extends State<CurriculoTela> {
           IconButton(icon: Icon(Icons.share, color: Colors.white,),
               onPressed: (){
                 setState(() => printmode = !printmode);
-              })
+              }),
+          BackButton(
+            onPressed: () {
+              context.read<AuthenticationService>().signOut();
+            }
+          )
         ],
         title: Text(widget.title),
       ),

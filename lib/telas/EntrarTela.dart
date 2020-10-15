@@ -1,32 +1,71 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:curriculo_virtual/main.dart';
+import 'package:curriculo_virtual/service/CurriculoObject.dart';
+import 'package:curriculo_virtual/service/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class EntrarTela extends StatefulWidget{
-  @override
-  _EntrarTelaState createState() => _EntrarTelaState();
-}
+class EntrarTela extends StatelessWidget {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-class _EntrarTelaState extends State<EntrarTela> {
+  double alturaTela;
+
   @override
   Widget build(BuildContext context) {
+    alturaTela = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Entrar"),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Form(
-              child: Column(
-                children: [
-                  TextFormField(),
-                  TextFormField()
-                ],
-              ),
+          Text("Currículo Virtual",
+            style: TextStyle(color: color, fontSize: 26),
+          ),
+          TextField(
+            controller: emailController,
+            decoration: InputDecoration(
+              labelText: "Email",
             ),
+          ),
+          TextField(
+            controller: passwordController,
+            decoration: InputDecoration(
+              labelText: "Senha",
+            ),
+          ),
+          SizedBox(height: alturaTela*0.025,),
+          RaisedButton(
+            color: color,
+            onPressed: () {
+              fetchData();
+              /*
+              context.read<AuthenticationService>().signIn(
+                email: emailController.text.trim(),
+                password: passwordController.text.trim(),
+              );
+
+               */
+            },
+            child: Text("Entrar",
+            style: TextStyle(color: Colors.white),
+            ),
+          ),
+          SizedBox(height: alturaTela*0.05,),
+          Text("Desenvolvido por Caleb Sousa, 2020",
+            style: TextStyle(fontStyle: FontStyle.italic),
           )
         ],
       ),
     );
   }
+}
+
+fetchData() async{
+  CurriculoObject curriculo;
+  CollectionReference colletionReference = FirebaseFirestore.instance.collection('usuarios');
+  colletionReference.snapshots().listen((snapshot) async {
+    //var doc = await colletionReference.doc().get();
+    print(snapshot);
+  });
 }
