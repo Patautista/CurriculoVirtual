@@ -2,7 +2,7 @@ import 'package:curriculo_virtual/telas/CurriculoTela.dart';
 import 'package:curriculo_virtual/telas/EntrarTela.dart';
 import 'package:flutter/material.dart';
 
-const Color color = Colors.deepPurple;
+const Color color = Colors.green;
 
 void main() {
   runApp(CurriculoApp());
