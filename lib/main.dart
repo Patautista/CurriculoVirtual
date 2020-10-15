@@ -1,5 +1,7 @@
+import 'package:curriculo_virtual/service/auth.dart';
 import 'package:curriculo_virtual/telas/CurriculoTela.dart';
 import 'package:curriculo_virtual/telas/EntrarTela.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 const Color color = Colors.green;
@@ -19,7 +21,12 @@ class CurriculoApp extends StatelessWidget {
         primarySwatch: color,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: login? CurriculoTela(title: 'Meu currículo'): EntrarTela(),
+      home: FutureBuilder(
+        future: Firebase.initializeApp(),
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot){
+            return login? CurriculoTela(title: 'Meu currículo'): EntrarTela();
+          }
+      )
     );
   }
 }

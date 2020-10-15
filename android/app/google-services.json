@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "839569632364",
+    "firebase_url": "https://appleucotron-8bdda.firebaseio.com",
+    "project_id": "appleucotron-8bdda",
+    "storage_bucket": "appleucotron-8bdda.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:839569632364:android:8cd4d36311782db76bbc49",
+        "android_client_info": {
+          "package_name": "com.app_leucotron"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "839569632364-dm1umgebhnvukjvlqdkbppmph2k6seda.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSEE-fc_R7z5oUQSjjOyD2PVbPwxz43cg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "839569632364-dm1umgebhnvukjvlqdkbppmph2k6seda.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:839569632364:android:dab2ec200af5591d6bbc49",
+        "android_client_info": {
+          "package_name": "com.curriculo_virtual"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "839569632364-dm1umgebhnvukjvlqdkbppmph2k6seda.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSEE-fc_R7z5oUQSjjOyD2PVbPwxz43cg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "839569632364-dm1umgebhnvukjvlqdkbppmph2k6seda.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

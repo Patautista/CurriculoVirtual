@@ -84,8 +84,10 @@ class _CurriculoTelaState extends State<CurriculoTela> {
     if (await Permission.camera.request().isGranted) {
       final pickedFile = await picker.getImage(source: ImageSource.camera);
       if (pickedFile != null) {
-        await _image.delete();
-        imageCache.evict(FileImage(_image));
+        if(_image!=null){
+          await _image.delete();
+          imageCache.evict(FileImage(_image));
+        }
         setState(() {
           _image = File(pickedFile.path);
         });
@@ -104,8 +106,10 @@ class _CurriculoTelaState extends State<CurriculoTela> {
     if (await Permission.mediaLibrary.request().isGranted) {
       final pickedFile = await picker.getImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-        await _image.delete();
-        imageCache.evict(FileImage(_image));
+        if(_image!=null){
+          await _image.delete();
+          imageCache.evict(FileImage(_image));
+        }
         setState(() {
           _image = File(pickedFile.path);
         });
@@ -131,6 +135,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
   TextEditingController dataController = new TextEditingController();
 
   List<Map<String, TextEditingController>> editorCursos = [];
+  List<Map<String, TextEditingController>> editorTitulos = [];
 
   void initState() {
     super.initState();
@@ -145,7 +150,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
     ];
     List<Titulo> titulos = <Titulo> [
       Titulo(titulo:"Programação em linguagem Java", resumo: "Experiência com Framework SpringBoot e criação de aplicações Backend com API REST"),
-      Titulo(titulo:"Programação em linguagem Java", resumo: "Experiência com Framework SpringBoot e criação de aplicações Backend com API REST")
+      Titulo(titulo:"Programação em linguagem PHP", resumo: "Experiência com Framework SpringBoot e criação de aplicações Backend com API REST")
     ];
     curriculo = new CurriculoObject("caleb.kart@gmail.com", true, "Idiomas.", cursos,
         titulos, "Gosto de aprender.", "84028922", "Caleb de Sousa Vasconcelos");
@@ -165,6 +170,13 @@ class _CurriculoTelaState extends State<CurriculoTela> {
       mapaControladoreCurso["statusController"].text = curriculo.listaCursos[i].status;
       mapaControladoreCurso["dataController"].text = curriculo.listaCursos[i].data;
       editorCursos.add(mapaControladoreCurso);
+    }
+    for(int i=0; i< curriculo.listaTitulos.length; i++){
+      var mapaControladoreTitulo = {"tituloController": TextEditingController(),"resumoController": TextEditingController()};
+
+      mapaControladoreTitulo["tituloController"].text = curriculo.listaTitulos[i].titulo;
+      mapaControladoreTitulo["resumoController"].text = curriculo.listaTitulos[i].resumo;
+      editorTitulos.add(mapaControladoreTitulo);
     }
   }
 
@@ -214,6 +226,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                           ],
                         ),
                         SizedBox(height: alturaTela*0.015,),
+                        _image==null?
                         GestureDetector(
                           onTap: (){
                             setState(() {
@@ -221,18 +234,46 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                             });
                           },
                           child: Container(child: Text("Cancelar", style: TextStyle(fontSize: 16, color: Colors.red, fontWeight: FontWeight.bold))),
-                        ),
+                        )
+                        :
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () async{
+                                await _image.delete();
+                                imageCache.evict(FileImage(_image));
+                                setState(() {
+                                  editmode_img = !editmode_img;
+                                });
+                              },
+                              child: Container(child: Text("Apagar", style: TextStyle(fontSize: 16, color: Colors.red, fontWeight: FontWeight.bold))),
+                            ),
+                            SizedBox(width: alturaTela*0.05,),
+                            GestureDetector(
+                              onTap: (){
+                                setState(() {
+                                  editmode_img = !editmode_img;
+                                });
+                              },
+                              child: Container(child: Text("Cancelar", style: TextStyle(fontSize: 16, color: Colors.red, fontWeight: FontWeight.bold))),
+                            ),
+                          ],
+                          mainAxisAlignment: MainAxisAlignment.center,
+                        )
                       ],
                     )
                         :
-                    GestureDetector(
-                        onTap: (){
-                          setState(() {
-                            editmode_img = !editmode_img;
-                          });
-                        },
-                        child: carregarImagem(_image, alturaTela)
-                    );
+                        printmode && _image==null?
+                            SizedBox()
+                        :
+                            GestureDetector(
+                                onTap: (){
+                                  setState(() {
+                                    editmode_img = !editmode_img;
+                                  });
+                                },
+                                child: carregarImagem(_image, alturaTela)
+                            );
                 }
               }),
         ],
@@ -279,6 +320,15 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                           child:  IconButton(icon: Icon(Icons.create, size: alturaTela*0.03,),
                             color: color,
                             onPressed: (){
+                              for(int i=0; i < curriculo.listaTitulos.length; i++){
+                                //Checa se algum dos campos está vazio.Se sim, então remove o elemento da lista e seus controladores.
+                                if(editorTitulos[i]["tituloController"].text == "" || editorTitulos[i]["resumoController"].text == ""){
+                                  setState(() {
+                                    curriculo.listaTitulos.removeAt(i);
+                                    editorTitulos.removeAt(i);
+                                  });
+                                }
+                              }
                               setState(() {
                                 editmode_titl = !editmode_titl;
                               });
@@ -300,59 +350,34 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                       addAutomaticKeepAlives: true,
                       physics: ScrollPhysics(),
                       shrinkWrap: true,
-                      itemCount: curriculo.listaCursos.length,
+                      itemCount: curriculo.listaTitulos.length,
                       itemBuilder: (BuildContext context, int index){
                         return Column(
                             children: [
-                              SizedBox(height: alturaTela*0.05),
+                              SizedBox(height: alturaTela*0.03),
                               ConstrainedBox(
                                 constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
                                 child: TextFormField(
                                   onChanged: (text) {
                                     print("First text field: $text");
                                   },
-                                  controller: editorCursos[index]["cursoController"],
+                                  controller: editorTitulos[index]["tituloController"],
                                   decoration: InputDecoration(
-                                      hintText: "Nome do Curso"
+                                      hintText: "Nome do Título"
                                   ),
-                                  onSaved: (String value) {
-                                    print(editorCursos[index]["cursoController"].text);
-                                  },
                                 ),
                               ),
                               ConstrainedBox(
-                                constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                                constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.13)),
                                 child: TextFormField(
+                                  keyboardType: TextInputType.multiline,
+                                  maxLines: null,
                                   onChanged: (text) {
                                     print("First text field: $text");
                                   },
-                                  controller: editorCursos[index]["instituicaoController"],
+                                  controller: editorTitulos[index]["resumoController"],
                                   decoration: InputDecoration(
-                                      hintText: "Nome da Instituição"
-                                  ),
-                                  onSaved: (String value) {
-                                    print(editorCursos[index]["instituicaoController"].text);
-                                  },
-                                ),
-                              ),
-                              ConstrainedBox(
-                                constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
-                                child: TextFormField(
-                                  controller: editorCursos[index]["statusController"],
-                                  decoration: InputDecoration(
-                                      hintText: "Status do curso"
-                                  ),
-                                  onSaved: (String value) {
-                                    print('Value for field ');
-                                  },
-                                ),
-                              ),
-                              ConstrainedBox(
-                                constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
-                                child: TextField(
-                                  controller: editorCursos[index]["dataController"],
-                                  decoration: InputDecoration(
-                                      hintText: "Status do curso"
+                                      hintText: "Resumo"
                                   ),
                                 ),
                               ),
@@ -361,31 +386,60 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                       },
                     ),
                   ),
+                  SizedBox(height: alturaTela*0.03,),
+                  GestureDetector(
+                    onTap: (){
+
+                      var mapaControladoreTitulo = {"tituloController": TextEditingController(),"resumoController": TextEditingController()};
+
+                      setState(() {
+                        curriculo.listaTitulos.add(Titulo(titulo: "", resumo: ""));
+                        editorTitulos.add(mapaControladoreTitulo);
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Container(
+                          height: alturaTela*0.1,
+                          decoration: BoxDecoration(
+                              border: Border.all(color: Colors.blueGrey),
+                              borderRadius: BorderRadius.circular(20)
+                          ),
+                          child: Row(
+                            children: [
+                              Text("Novo título", style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold, fontSize: 16),),
+                              Icon(Icons.add, color: Colors.blueGrey,)
+                            ],
+                            mainAxisAlignment: MainAxisAlignment.center,
+                          )
+                      ),
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                     child: RaisedButton(
                       color: color,
                       textColor: Colors.white,
                       onPressed: () {
-                        for(int i=0; i < curriculo.listaCursos.length; i++){
-                          setState(() {
-                            curriculo.listaCursos[i].titulo = editorCursos[i]["cursoController"].text;
-                            curriculo.listaCursos[i].instituicao = editorCursos[i]["instituicaoController"].text;
-                            curriculo.listaCursos[i].status = editorCursos[i]["statusController"].text;
-                            curriculo.listaCursos[i].data = editorCursos[i]["dataController"].text;
-                          });
+                        for(int i=0; i < curriculo.listaTitulos.length; i++){
+                          if(editorTitulos[i]["tituloController"].text == "" || editorTitulos[i]["resumoController"].text == ""){
+                            setState(() {
+                              curriculo.listaTitulos.removeAt(i);
+                              editorTitulos.removeAt(i);
+                            });
+                          }
+                          else{
+                            setState(() {
+                              curriculo.listaTitulos[i].titulo = editorTitulos[i]["tituloController"].text;
+                              curriculo.listaTitulos[i].resumo = editorTitulos[i]["resumoController"].text;
+                            });
+                          }
                         }
                         setState(() {
-                          editmode_curs = !editmode_curs;
+                          editmode_titl = !editmode_titl;
                         });
-                        /*
-                              if (_formKey.currentState.validate()) {
-                                // If the form is valid, display a Snackbar.
-                                Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
-                              }
-                               */
                       },
-                      child: Text('Salvar'),
+                      child: Text('Salvar alterações'),
                     ),
                   ),
                 ],
@@ -410,6 +464,16 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                       child: IconButton(icon: Icon(Icons.create, size: alturaTela*0.03,),
                         color: color,
                         onPressed: (){
+                          for(int i=0; i < curriculo.listaCursos.length; i++){
+                            //Checa se algum dos campos está vazio.Se sim, então remove o elemento da lista e seus controladores.
+                            if(editorCursos[i]["cursoController"].text == "" || editorCursos[i]["instituicaoController"].text == ""
+                                || editorCursos[i]["statusController"].text == "" || editorCursos[i]["dataController"].text == ""){
+                              setState(() {
+                                curriculo.listaCursos.removeAt(i);
+                                editorCursos.removeAt(i);
+                              });
+                            }
+                          }
                           setState(() {
                             editmode_curs = !editmode_curs;
                           });
@@ -446,9 +510,6 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                                   decoration: InputDecoration(
                                       hintText: "Nome do Curso"
                                   ),
-                                  onSaved: (String value) {
-                                    print(editorCursos[index]["cursoController"].text);
-                                  },
                                 ),
                               ),
                               ConstrainedBox(
@@ -461,9 +522,6 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                                   decoration: InputDecoration(
                                       hintText: "Nome da Instituição"
                                   ),
-                                  onSaved: (String value) {
-                                    print(editorCursos[index]["instituicaoController"].text);
-                                  },
                                 ),
                               ),
                               ConstrainedBox(
@@ -473,9 +531,6 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                                   decoration: InputDecoration(
                                       hintText: "Status do curso"
                                   ),
-                                  onSaved: (String value) {
-                                    print('Value for field ');
-                                  },
                                 ),
                               ),
                               ConstrainedBox(
@@ -483,13 +538,43 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                                 child: TextField(
                                   controller: editorCursos[index]["dataController"],
                                   decoration: InputDecoration(
-                                      hintText: "Status do curso"
+                                      hintText: "Data de início"
                                   ),
                                 ),
                               ),
                             ]
                         );
                       },
+                    ),
+                  ),
+                  SizedBox(height: alturaTela*0.03,),
+                  GestureDetector(
+                    onTap: (){
+
+                      var mapaControladoreCurso = {"cursoController": TextEditingController(),"instituicaoController": TextEditingController() ,
+                        "statusController": TextEditingController(), "dataController": TextEditingController()};
+
+                      setState(() {
+                        curriculo.listaCursos.add(Curso(titulo: "", data: "", status: "", instituicao: ""));
+                        editorCursos.add(mapaControladoreCurso);
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Container(
+                          height: alturaTela*0.1,
+                          decoration: BoxDecoration(
+                              border: Border.all(color: Colors.blueGrey),
+                              borderRadius: BorderRadius.circular(20)
+                          ),
+                          child: Row(
+                            children: [
+                              Text("Novo curso", style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold, fontSize: 16),),
+                              Icon(Icons.add, color: Colors.blueGrey,)
+                            ],
+                            mainAxisAlignment: MainAxisAlignment.center,
+                          )
+                      ),
                     ),
                   ),
                   Padding(
@@ -499,24 +584,28 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                       textColor: Colors.white,
                       onPressed: () {
                         for(int i=0; i < curriculo.listaCursos.length; i++){
-                          setState(() {
-                            curriculo.listaCursos[i].titulo = editorCursos[i]["cursoController"].text;
-                            curriculo.listaCursos[i].instituicao = editorCursos[i]["instituicaoController"].text;
-                            curriculo.listaCursos[i].status = editorCursos[i]["statusController"].text;
-                            curriculo.listaCursos[i].data = editorCursos[i]["dataController"].text;
-                          });
+                          //Checa se algum dos campos está vazio.Se sim, então remove o elemento da lista e seus controladores.
+                          if(editorCursos[i]["cursoController"].text == "" || editorCursos[i]["instituicaoController"].text == ""
+                              || editorCursos[i]["statusController"].text == "" || editorCursos[i]["dataController"].text == ""){
+                            setState(() {
+                              curriculo.listaCursos.removeAt(i);
+                              editorCursos.removeAt(i);
+                            });
+                          }
+                          else{
+                            setState(() {
+                              curriculo.listaCursos[i].titulo = editorCursos[i]["cursoController"].text;
+                              curriculo.listaCursos[i].instituicao = editorCursos[i]["instituicaoController"].text;
+                              curriculo.listaCursos[i].status = editorCursos[i]["statusController"].text;
+                              curriculo.listaCursos[i].data = editorCursos[i]["dataController"].text;
+                            });
+                          }
                         }
                         setState(() {
                           editmode_curs = !editmode_curs;
                         });
-                        /*
-                              if (_formKey.currentState.validate()) {
-                                // If the form is valid, display a Snackbar.
-                                Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
-                              }
-                               */
                       },
-                      child: Text('Salvar'),
+                      child: Text('Salvar alterações'),
                     ),
                   ),
                 ],
@@ -601,14 +690,8 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                                 curriculo.informal = expertiseController.text;
                                 editmode_supl = !editmode_supl;
                               });
-                              /*
-                              if (_formKey.currentState.validate()) {
-                                // If the form is valid, display a Snackbar.
-                                Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
-                              }
-                               */
                             },
-                            child: Text('Salvar'),
+                            child: Text('Salvar alterações'),
                           ),
                         ),
                       ]
@@ -729,21 +812,13 @@ class _CurriculoTelaState extends State<CurriculoTela> {
                             color: color,
                             textColor: Colors.white,
                             onPressed: () {
-                              // Validate returns true if the form is valid, or false
-                              // otherwise.
                               setState(() {
                                 curriculo.telefone = telefoneController.text;
                                 curriculo.email = emailController.text;
                                 editmode_cont = !editmode_cont;
                               });
-                              /*
-                              if (_formKey.currentState.validate()) {
-                                // If the form is valid, display a Snackbar.
-                                Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
-                              }
-                               */
                             },
-                            child: Text('Salvar'),
+                            child: Text('Salvar alterações'),
                           ),
                         ),
                       ]
