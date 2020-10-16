@@ -18,9 +18,10 @@ import 'package:share/share.dart';
 
 
 class CurriculoTela extends StatefulWidget {
-  CurriculoTela({Key key, this.title, this.curriculo}) : super(key: key);
+  CurriculoTela({Key key, this.title, this.curriculo, this.uid}) : super(key: key);
 
   final String title;
+  final String uid;
   final CurriculoObject curriculo;
 
   @override
@@ -41,6 +42,7 @@ class _CurriculoTelaState extends State<CurriculoTela> {
   bool editmode_titl = false;
   bool editmode_prof = false;
   bool editmode_img = false;
+  bool editmode_nome = false;
   bool printmode = false;
 
   ui.Image curriculoImage = null;
@@ -69,6 +71,10 @@ class _CurriculoTelaState extends State<CurriculoTela> {
   final picker = ImagePicker();
 
   Future getImage() async {
+
+    CurriculoObject c;
+
+    //c = await fetchCurriculo(widget.uid);
     String path;
     await getApplicationDocumentsDirectory().then((value) => path = value.path);
     if(await File("$path/image1.png").exists()){
@@ -125,7 +131,8 @@ class _CurriculoTelaState extends State<CurriculoTela> {
 
 
   //Controladores de texto.
-  final perfilController = new TextEditingController();
+  TextEditingController perfilController = new TextEditingController();
+  TextEditingController nomeController = new TextEditingController();
   TextEditingController expertiseController = new TextEditingController();
   TextEditingController telefoneController = new TextEditingController();
   TextEditingController emailController = new TextEditingController();
@@ -275,9 +282,62 @@ class _CurriculoTelaState extends State<CurriculoTela> {
           SizedBox(height: alturaTela * 0.075),
           Column(
             children: [
-              Text(
-                curriculo.nome,
-                style: nome,
+              editmode_nome?
+              FocusTraversalGroup(
+                child: Form(
+                  autovalidateMode: AutovalidateMode.always,
+                  onChanged: () {
+                    Form.of(primaryFocus.context).save();
+                  },
+                  child: Column(
+                      children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints.tight(Size(alturaTela*0.55, alturaTela*0.08)),
+                          child: TextFormField(
+                            onChanged: (text) {
+                              print("First text field: $text");
+                            },
+                            controller: nomeController,
+                            decoration: InputDecoration(
+                                hintText: "Nome"
+                            ),
+                            onSaved: (String value) {
+                              print(nomeController.text);
+                            },
+                          ),
+                        ),
+                        SizedBox(height: alturaTela*0.05),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: RaisedButton(
+                            color: color,
+                            textColor: Colors.white,
+                            onPressed: () {
+                              // Validate returns true if the form is valid, or false
+                              // otherwise.
+                              setState(() {
+                                curriculo.nome = nomeController.text;
+                                editmode_nome = !editmode_nome;
+                              });
+                            },
+                            child: Text('Salvar alterações'),
+                          ),
+                        ),
+                      ]
+                  ),
+                ),
+              )
+                  :
+              GestureDetector(
+                onTap: (){
+                  setState(() {
+                    editmode_nome = !editmode_nome;
+                  });
+                },
+                child: Text(
+                  curriculo.nome,
+                  style: nome,
+                ),
               ),
               SizedBox(height: alturaTela * 0.05),
               Row(

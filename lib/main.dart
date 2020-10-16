@@ -49,22 +49,19 @@ class AuthenticationWrapper extends StatelessWidget {
     final firebaseUser = context.watch<User>();
 
     if (firebaseUser != null) {
-      return CurriculoTela(title: "Meu Currículo", curriculo: curriculo,);
+      return CurriculoTela(title: "Meu Currículo", uid: firebaseUser.uid, curriculo: curriculo,);
     }
     return EntrarTela();
   }
 }
 
 List<Curso> cursos = <Curso> [
-  Curso(data:"01/01/2017", titulo: "Biologia" , status: "Incompleto", instituicao: "Universidade Federal do Ceará"),
-  Curso(data:"04/03/2019", titulo: "Computação" , status: "Completo", instituicao: "Universidade Federal do Ceará"),
-  Curso(data:"31/05/2019", titulo: "Direito" , status: "Completo", instituicao: "Universidade Federal do Ceará")
+
 ];
 List<Titulo> titulos = <Titulo> [
-  Titulo(titulo:"Programação em linguagem Java", resumo: "Experiência com Framework SpringBoot e criação de aplicações Backend com API REST"),
-  Titulo(titulo:"Programação em linguagem PHP", resumo: "Experiência com Framework SpringBoot e criação de aplicações Backend com API REST")
+
 ];
 
-CurriculoObject curriculo = new CurriculoObject("caleb.kart@gmail.com", "Idiomas.", cursos,
-    titulos, "Gosto de aprender.", "84028922", "Caleb de Sousa Vasconcelos");
+CurriculoObject curriculo = new CurriculoObject("a", "a", cursos,
+    titulos, "a", "a", "a");
 

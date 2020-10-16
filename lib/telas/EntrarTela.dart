@@ -15,6 +15,9 @@ class EntrarTela extends StatelessWidget {
   Widget build(BuildContext context) {
     alturaTela = MediaQuery.of(context).size.height;
 
+    emailController.text = "test@gmail.com";
+    passwordController.text = "123456";
+
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -38,14 +41,11 @@ class EntrarTela extends StatelessWidget {
           RaisedButton(
             color: color,
             onPressed: () {
-              fetchData();
-              /*
               context.read<AuthenticationService>().signIn(
                 email: emailController.text.trim(),
                 password: passwordController.text.trim(),
               );
 
-               */
             },
             child: Text("Entrar",
             style: TextStyle(color: Colors.white),
@@ -59,13 +59,4 @@ class EntrarTela extends StatelessWidget {
       ),
     );
   }
-}
-
-fetchData() async{
-  CurriculoObject curriculo;
-  CollectionReference colletionReference = FirebaseFirestore.instance.collection('usuarios');
-  colletionReference.snapshots().listen((snapshot) async {
-    //var doc = await colletionReference.doc().get();
-    print(snapshot);
-  });
 }
